@@ -1,0 +1,322 @@
+\documentclass[a4paper,12pt]{article}
+
+% ==================== 基础宏包配置 ====================
+\usepackage[UTF8]{ctex}       % 中文支持
+\usepackage{geometry}         % 页面布局
+\usepackage{graphicx}         % 图片支持
+\usepackage{float}            % 图片浮动控制
+\usepackage{listings}         % 代码块展示
+\usepackage{xcolor}           % 颜色支持
+\usepackage{hyperref}         % 超链接
+\usepackage{amsmath}          % 数学公式
+\usepackage{booktabs}         % 三线表
+\usepackage{caption}          % 标题美化
+\usepackage{fancyhdr}         % 页眉页脚
+\usepackage{titlesec}         % 标题格式
+\usepackage{algorithm}        % 算法伪代码
+\usepackage{algorithmic}
+
+% ==================== 路径与页面设置 ====================
+% 设置图片搜索路径 (使用您指定的绝对路径)
+\graphicspath{{C:/Users/lenovo/Desktop/暑期课/大作业/报告图片/}}
+
+% 页面边距
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% 修复页眉高度警告
+\setlength{\headheight}{15pt}
+
+% 页眉页脚
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{数据导论课程大作业}
+\rhead{KPL 战术分析与 BP 辅助系统}
+\cfoot{\thepage}
+
+% 代码块样式设置
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.96,0.96}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4,
+    frame=single
+}
+\lstset{style=mystyle}
+
+% ==================== 文档正文 ====================
+\begin{document}
+
+% ------------------- 封面页 -------------------
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    
+    % 使用主页面截图作为封面图
+    \includegraphics[width=0.85\textwidth]{主页面.png} 
+    
+    \vspace{2cm}
+    {\Huge \bfseries 基于多源数据融合的 \\[0.5em] KPL 战术分析与 BP 辅助系统 \par}
+    
+    \vspace{1.5cm}
+    {\Large \bfseries 数据导论课程大作业报告 \par}
+    
+    \vspace{3cm}
+    
+    \begin{table}[h]
+        \centering
+        \Large
+        \begin{tabular}{rl}
+            \textbf{汇报人：} & 吴博闻 \\
+            \textbf{时\quad 间：} & 2026年1月 \\
+            \textbf{技术栈：} & Python, SQL Server, RAG, Collaborative Filtering \\
+        \end{tabular}
+    \end{table}
+    
+    \vfill
+\end{titlepage}
+
+% ------------------- 摘要 -------------------
+\begin{abstract}
+    随着移动电竞产业的爆发式增长，职业联赛（KPL）产生的数据量呈指数级上升。然而，现有的数据工具多停留在赛后静态统计层面，缺乏对赛中 BP（Ban/Pick）博弈的实时决策支持。本项目构建了一个融合多源数据的战术分析系统。系统底层采用 SQL Server 存储海量异构数据，通过 Python 实现 ETL 管道与特征工程；核心算法层创新性地结合了基于协同过滤（Item-Based CF）的推荐引擎与基于 RAG（检索增强生成）的大模型战术推理；前端采用多线程 GUI 技术实现流畅交互。实验表明，该系统能够有效从非结构化和半结构化数据中提取高价值战术特征，为普通玩家和分析师提供“感性解说”与“理性推荐”双重决策支持。
+    
+    \textbf{关键词：} 数据挖掘，协同过滤，RAG，特征工程，KPL数据分析
+\end{abstract}
+
+\newpage
+% ------------------- 目录 -------------------
+\tableofcontents
+\newpage
+
+% ------------------- 第一章：项目背景与架构 -------------------
+\section{项目概况}
+
+\subsection{行业痛点与项目目标}
+当前电竞数据分析领域主要面临两大痛点：
+\begin{enumerate}
+    % 【修复点】这里将 & 转义为 \&
+    \item \textbf{数据体量大且杂（Data Variety \& Volume）}：比赛产生的数据涵盖经济曲线（时间序列）、英雄交互（图数据）、BP博弈（序列数据），普通用户难以从中提取有效信息。
+    \item \textbf{缺乏实时决策支持（Real-time Decision Making）}：现有工具无法在 BP 阶段提供基于博弈论的实时战术建议，导致数据与应用场景割裂。
+\end{enumerate}
+
+本项目旨在打通“数据获取-清洗-建模-应用”的全链路，构建一个能“读懂数据”并提供“实时建议”的智能助手。
+
+\subsection{系统整体架构}
+本系统采用经典的 MVC 分层架构设计，实现了数据存储、业务逻辑与前端展示的解耦：
+\begin{enumerate}
+    \item \textbf{数据层 (Data Layer)}：基于 SQL Server，存储 \texttt{MatchData}（原始比赛流）、\texttt{team\_info}（战队画像）及英雄统计表。
+    \item \textbf{逻辑层 (Logic Layer)}：使用 Python (Pandas/PyODBC) 进行数据清洗、特征聚合，并运行协同过滤算法核心。
+    \item \textbf{智能层 (Intelligence Layer)}：集成豆包 (Doubao) 大模型 API，基于 RAG 架构实现自然语言生成。
+    \item \textbf{表现层 (Presentation Layer)}：基于 wxPython 构建多线程 GUI 界面。
+\end{enumerate}
+
+% ------------------- 第二章：数据工程（核心） -------------------
+\section{数据工程与底层逻辑}
+
+数据工程是本项目的基础。我们处理的数据具有多源、异构、噪声大的特点，因此构建鲁棒的 ETL（Extract-Transform-Load）管道至关重要。
+
+\subsection{数据库设计与ER模型}
+为了支持复杂的关联查询，我们设计了星型模式（Star Schema）的数据库结构：
+\begin{itemize}
+    \item \textbf{事实表 (Fact Table)}：\texttt{MatchData}。存储细粒度的单场比赛记录，包含比赛ID、日期、蓝红方队伍、胜负结果以及 10 个英雄的 Pick 序列和 8 个 Ban 序列。
+    \item \textbf{维度表 (Dimension Tables)}：
+        \begin{itemize}
+            \item \texttt{team\_info}：记录战队的宏观画像，如胜率、场均击杀（衡量进攻性）、场均死亡（衡量容错率）、分均经济（衡量运营能力）。
+            \item \texttt{TeamHeroBan/Choose}：记录各战队对特定英雄的偏好统计。
+        \end{itemize}
+\end{itemize}
+
+\subsection{数据清洗与噪声处理}
+在真实场景中，用户输入的战队名称往往存在不规范（如空格、大小写、别名）。在 \texttt{team\_analysis.py} 中，我们实现了字符串归一化逻辑：
+
+\begin{lstlisting}[language=Python, caption=数据清洗与模糊匹配算法]
+# 引用自 team_analysis.py
+def get_detailed_team_data(team_name):
+    # 字符串归一化：去除空格，转换为标准格式
+    clean_name = team_name.replace(' ', '')
+    search_param = f"%{clean_name}%"
+
+    # 使用 SQL LIKE 算子进行模糊匹配，增强系统鲁棒性
+    cursor.execute("SELECT * FROM team_info WHERE REPLACE(team, ' ', '') LIKE ?", 
+                   (search_param,))
+\end{lstlisting}
+
+此外，针对数据缺失（Missing Values）的情况，我们在 SQL 查询层和 Python 处理层均加入了空值填充（Imputation）策略，例如将缺失的胜率默认为 50\% 或标记为“暂无数据”，防止下游算法崩溃。
+
+\subsection{特征工程：从数据到画像}
+为了量化战队的战术风格，我们进行了深度的特征提取：
+\begin{itemize}
+    \item \textbf{本命英雄提取 (Signature Pick)}：利用 SQL 窗口函数与聚合算法，按 \texttt{ChooseCount} 降序排列，提取 Top-K 英雄，代表战队的“体系核心”。
+    \item \textbf{惧怕特征提取 (Fear Factor)}：统计 \texttt{BanCount}，识别战队最不希望遇到的对手英雄，代表战队的“体系短板”。
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{战队比赛数据.png}
+    \caption{系统底层的原始比赛数据，经过ETL处理后生成特征}
+\end{figure}
+
+% ------------------- 第三章：核心算法实现 -------------------
+\section{AI 核心与算法实现}
+
+本项目创新性地采用了“双引擎”智能决策架构，即 **基于统计学的协同过滤** 与 **基于生成式 AI 的 RAG** 深度融合。
+
+\subsection{算法一：基于协同过滤 (Item-Based CF) 的推荐引擎}
+为了在 BP 阶段提供理性的英雄推荐，我们自主研发了基于 Item-Based Collaborative Filtering 的推荐算法。该算法的核心假设是：“如果英雄 A 和英雄 B 经常在获胜对局中同时出现，则它们具有高协同性”。
+
+\subsubsection{矩阵构建与向量化}
+首先，我们将存储在 SQL 中的长尾交易数据（Transaction Data）转化为稀疏矩阵（Sparse Matrix）：
+\begin{itemize}
+    \item \textbf{共现矩阵 (Co-occurrence Matrix)}：$C_{ij}$ 表示英雄 $i$ 和英雄 $j$ 同时出场的次数。
+    \item \textbf{胜场矩阵 (Win Matrix)}：$W_{ij}$ 表示英雄 $i$ 和英雄 $j$ 同时出场且获胜的次数。
+\end{itemize}
+
+\subsubsection{相似度计算与评分公式}
+不同于传统的余弦相似度，我们设计了一种**“净胜率提升”**评分公式，以剥离英雄自身的基础胜率（User Bias），仅保留“搭配”带来的增益：
+
+\[ Score(H_{target} | H_{selected}) = \frac{W(H_{target} \cap H_{selected})}{C(H_{target} \cap H_{selected})} - P(Win | H_{target}) \]
+
+在 \texttt{bp\_engine.py} 中的实现逻辑如下：
+
+\begin{lstlisting}[language=Python, caption=协同矩阵构建与评分计算]
+# 遍历历史数据构建矩阵
+for h1 in heroes_list:
+    for h2 in heroes_list:
+        games = pair_counts.loc[h1, h2]
+        if games >= min_games:
+            # 计算联合胜率
+            joint_win_rate = pair_wins.loc[h1, h2] / games
+            # 减去 h1 的基础胜率，提取“净协同值”
+            self.synergy_matrix.loc[h1, h2] = joint_win_rate - self.hero_win_rates[h1]
+\end{lstlisting}
+
+该算法能够有效发现潜在的强关联组合（如“大乔+老夫子”），而非仅仅推荐高胜率的超模英雄。
+
+\subsection{算法二：基于 RAG 的生成式决策架构}
+传统的 LLM（大语言模型）在垂直领域常出现“幻觉”。本项目采用 **RAG（检索增强生成）** 架构解决此问题。
+
+\subsubsection{动态上下文注入}
+系统首先通过 SQL 检索出特定战队的结构化画像（如“场均击杀 10.0”、“高频禁用大乔”），然后将这些**真实数据（Context）**动态注入到 System Prompt 中。
+
+\subsubsection{思维链 (Chain-of-Thought) 提示工程}
+我们设计了复杂的 Prompt 结构，引导 AI 进行分步推理：
+\begin{enumerate}
+    \item \textbf{角色设定}：顶级战术分析师。
+    \item \textbf{数据解读}：结合场均击杀判断是“打架队”还是“运营队”。
+    \item \textbf{逻辑推演}：基于常用英雄分析战术体系。
+    \item \textbf{结论输出}：给出具体的 BP 克制建议。
+\end{enumerate}
+
+\begin{lstlisting}[language=Python, caption=RAG 提示词构建 (team\_analysis.py)]
+system_prompt = """
+你是一名KPL王者荣耀职业联赛的顶级战术分析师。
+请严格按照以下格式输出：
+【战队风格与体系】结合场均击杀（高则为打架队）和常用英雄分析...
+【如何克制】针对他们“最常使用”的英雄，对手应该禁用谁？
+"""
+user_message = f"分析目标：{team_name}\n数据详情：\n{data_context}"
+\end{lstlisting}
+
+\subsection{多线程与系统性能优化}
+由于 LLM API 的响应通常有 1-2 秒的延迟，为了防止 GUI 界面在计算时“假死”，我们在 \texttt{game.py} 中引入了多线程机制：
+
+\begin{lstlisting}[language=Python, caption=多线程异步调用]
+# 启动子线程处理 AI 请求，主线程继续响应 UI 事件
+threading.Thread(target=self.call_ai_and_update, 
+                 args=(prompt, current_team_picks)).start()
+\end{lstlisting}
+
+% ------------------- 第四章：功能模块展示 -------------------
+\section{全功能模块展示与分析}
+
+\subsection{实时 BP 模拟与智能博弈}
+这是本系统的核心亮点。用户在模拟器中每进行一次选择，后台的 CF 引擎和 RAG 引擎会同时工作：
+\begin{itemize}
+    \item \textbf{右侧上方（AI 解说）}：提供感性的战术评价（如“阵容偏向前期进攻”）。
+    \item \textbf{右侧下方（大数据推荐）}：提供理性的胜率预测（如“建议搭配大司命，胜率提升 12\%”）。
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{BP模拟器过程页.png}
+    \caption{实时 BP 模拟界面：展示了“AI解说”与“大数据推荐”的双重输出}
+\end{figure}
+
+\subsection{多维度数据透视}
+系统支持从“战队”和“位置”两个维度进行深度数据挖掘。
+
+\subsubsection{战队维度分析}
+通过可视化图表，用户可以直观看到战队的“本命英雄”（高频选择）与“惧怕点”（高频禁用）。
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{战队常选择英雄.png}
+        \caption{战队体系核心（常选）}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{战队常禁用英雄.png}
+        \caption{战队体系短板（常禁）}
+    \end{minipage}
+\end{figure}
+
+\subsubsection{位置维度分析}
+针对不同分路的玩家，系统通过 SQL 的 \texttt{WHERE position = ?} 聚合查询，提供细分的高胜率英雄推荐。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{位置高胜率英雄.png}
+    \caption{对抗路高胜率英雄推荐：基于全服大数据的筛选}
+\end{figure}
+
+\subsection{AI 深度战术报告}
+利用 RAG 技术，系统能一键生成结构化的战队分析报告，包含风格、短板及克制策略，字数约 300 字，逻辑清晰。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{战队特点分析.png}
+    \caption{AI 生成的深度战术分析报告，准确识别出 AG 超玩会的“进攻体系”}
+\end{figure}
+
+\subsection{赛后复盘}
+BP 结束后，系统会自动触发全盘分析，评价双方最终阵容的优劣势。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{BP模拟器总结页.png}
+    \caption{赛后阵容 AI 最终复盘}
+\end{figure}
+
+% ------------------- 第五章：总结与展望 -------------------
+\section{未来展望与总结}
+
+\subsection{未来展望}
+本项目已完成了从原始数据存储到智能决策分析的完整闭环，但在算法深度上仍有探索空间：
+\begin{enumerate}
+    \item \textbf{推荐算法的深度优化}：目前使用的 Item-Based CF 在面对极度稀疏数据（冷门英雄组合）时可能存在偏差。未来计划引入 \textbf{矩阵分解 (Matrix Factorization, e.g., SVD++)} 技术，挖掘潜在特征向量。
+    \item \textbf{强化学习 (Reinforcement Learning)}：构建一个基于 RL 的虚拟对战环境，让 AI 进行左右互搏 (Self-Play)。通过模拟数万场 BP 对局，利用策略梯度 (Policy Gradient) 算法自动学习最优 BP 策略，实现从“辅助决策”到“自动决策”的进化。
+\end{enumerate}
+
+\subsection{总结}
+本项目综合运用了 SQL 数据库技术、Python 数据分析栈、生成式 AI (LLM) 以及经典推荐算法，构建了一个功能完备的 KPL 战术辅助系统。系统不仅解决了海量电竞数据“看不懂”的痛点，更通过“双引擎”架构实现了数据价值的深度挖掘与实时应用，在数据科学应用领域具有较高的实践意义。
+
+\end{document}

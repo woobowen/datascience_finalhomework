@@ -1,0 +1,208 @@
+﻿<Window x:Class="KPLAssistant.MatchDataWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KPLAssistant"
+        mc:Ignorable="d"
+        Title="战队比赛数据查询" Height="650" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Microsoft YaHei UI"
+        Foreground="#E0E0E0">
+
+    <Window.Resources>
+        <Color x:Key="AccentColor">#00FFFF</Color>
+        <SolidColorBrush x:Key="AccentColorBrush" Color="{StaticResource AccentColor}"/>
+        <SolidColorBrush x:Key="BorderColorBrush" Color="#4A5A70"/>
+        <local:TeamMatchToBrushConverter x:Key="TeamToBrushConverter"/>
+
+        <Style x:Key="TechButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColorBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="20,0,0,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3">
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="glowEffect" ShadowDepth="0" Color="{StaticResource AccentColor}" Opacity="0" BlurRadius="0"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentColorBrush}"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="Opacity" To="0.8" Duration="0:0:0.2"/>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="BlurRadius" To="15" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="BlurRadius" To="0" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="border" Property="Background" Value="#3300FFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#331C212B"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColorBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#DDDDDD"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="Black"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#1C212B" Offset="0"/>
+                <GradientStop Color="#12151C" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Image Source="C:\Users\lenovo\Desktop\暑期课\大作业\其它图片\背景.png" Stretch="UniformToFill" Opacity="0.1" />
+
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                <Label Content="选择战队:" FontWeight="Bold" VerticalAlignment="Center" Foreground="White"/>
+                <ComboBox x:Name="TeamComboBox" Width="150" SelectionChanged="TeamComboBox_SelectionChanged" VerticalAlignment="Center"/>
+                <Image x:Name="LogoImage" Width="30" Height="30" Margin="10,0" VerticalAlignment="Center"/>
+                <Label Content="查询最近场数 (1-20):" FontWeight="Bold" VerticalAlignment="Center" Foreground="White"/>
+                <ComboBox x:Name="MatchCountComboBox" Width="60" IsEditable="True" VerticalAlignment="Center"/>
+                <Button x:Name="QueryButton" Content="点击查询" Width="100" Style="{StaticResource TechButtonStyle}" Click="QueryButton_Click" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <DataGrid Grid.Row="1" x:Name="MatchDataGrid"
+          Background="#551C212B" BorderThickness="0"
+          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+          HorizontalGridLinesBrush="{StaticResource BorderColorBrush}" VerticalGridLinesBrush="{StaticResource BorderColorBrush}"
+          AlternatingRowBackground="#11FFFFFF" RowBackground="Transparent"
+          ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}">
+                <DataGrid.Columns>
+
+                    <DataGridTextColumn Header="蓝方队伍" Binding="{Binding BlueTeamName}" Width="*">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource TeamToBrushConverter}">
+                                            <Binding Path="BlueTeamName"/>
+                                            <Binding ElementName="TeamComboBox" Path="SelectedItem"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="红方队伍" Binding="{Binding RedTeamName}" Width="*">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource TeamToBrushConverter}">
+                                            <Binding Path="RedTeamName"/>
+                                            <Binding ElementName="TeamComboBox" Path="SelectedItem"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="获胜队伍" Binding="{Binding WinningTeam}" Width="*">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource DataGridCellStyle}">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <MultiBinding Converter="{StaticResource TeamToBrushConverter}">
+                                            <Binding Path="WinningTeam"/>
+                                            <Binding ElementName="TeamComboBox" Path="SelectedItem"/>
+                                        </MultiBinding>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="蓝方禁用1" Binding="{Binding BlueBan1}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方禁用2" Binding="{Binding BlueBan2}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方禁用3" Binding="{Binding BlueBan3}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方禁用4" Binding="{Binding BlueBan4}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+
+                    <DataGridTextColumn Header="红方禁用1" Binding="{Binding RedBan1}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方禁用2" Binding="{Binding RedBan2}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方禁用3" Binding="{Binding RedBan3}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方禁用4" Binding="{Binding RedBan4}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+
+                    <DataGridTextColumn Header="蓝方选择1" Binding="{Binding BluePick1}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方选择2" Binding="{Binding BluePick2}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方选择3" Binding="{Binding BluePick3}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方选择4" Binding="{Binding BluePick4}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="蓝方选择5" Binding="{Binding BluePick5}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+
+                    <DataGridTextColumn Header="红方选择1" Binding="{Binding RedPick1}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方选择2" Binding="{Binding RedPick2}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方选择3" Binding="{Binding RedPick3}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方选择4" Binding="{Binding RedPick4}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                    <DataGridTextColumn Header="红方选择5" Binding="{Binding RedPick5}" Width="*" CellStyle="{StaticResource DataGridCellStyle}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Image Source="C:\Users\lenovo\Desktop\暑期课\大作业\其它图片\kpl.jpg"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20" Height="60" Opacity="0.7"/>
+    </Grid>
+</Window>

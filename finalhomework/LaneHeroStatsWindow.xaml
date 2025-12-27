@@ -1,0 +1,134 @@
+﻿<Window x:Class="KPLAssistant.LaneHeroStatsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KPLAssistant"
+        mc:Ignorable="d"
+        Title="各分路英雄数据" Height="700" Width="450"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Microsoft YaHei UI"
+        Foreground="#E0E0E0">
+
+    <Window.Resources>
+        <Color x:Key="AccentColor">#00FFFF</Color>
+        <SolidColorBrush x:Key="AccentColorBrush" Color="{StaticResource AccentColor}"/>
+        <SolidColorBrush x:Key="BorderColorBrush" Color="#4A5A70"/>
+
+        <Style x:Key="TechButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColorBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3">
+                            <Border.Effect>
+                                <DropShadowEffect x:Name="glowEffect" ShadowDepth="0" Color="{StaticResource AccentColor}" Opacity="0" BlurRadius="0"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource AccentColorBrush}"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="Opacity" To="0.8" Duration="0:0:0.2"/>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="BlurRadius" To="15" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+                                            <DoubleAnimation Storyboard.TargetName="glowEffect" Storyboard.TargetProperty="BlurRadius" To="0" Duration="0:0:0.3"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="border" Property="Background" Value="#3300FFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#1C212B" Offset="0"/>
+                <GradientStop Color="#12151C" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Image Source="C:\Users\lenovo\Desktop\暑期课\大作业\其它图片\背景.png" Stretch="UniformToFill" Opacity="0.1" />
+
+        <Grid Margin="15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" BorderBrush="{StaticResource BorderColorBrush}" BorderThickness="1" Padding="10" CornerRadius="5" Background="#331C212B">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="选择分路:" FontWeight="Bold" VerticalAlignment="Center" Foreground="White"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="LaneComboBox" Margin="5" SelectionChanged="LaneComboBox_SelectionChanged" VerticalAlignment="Center"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="查询类型:" FontWeight="Bold" VerticalAlignment="Center" Foreground="White"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DataTypeComboBox" Margin="5" VerticalAlignment="Center"/>
+
+                    <Image Grid.Row="2" Grid.Column="0" x:Name="LaneIconImage" Height="30" Margin="5"/>
+                    <Button Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" x:Name="QueryButton" Content="点击查询" Style="{StaticResource TechButtonStyle}" Click="QueryButton_Click"/>
+                </Grid>
+            </Border>
+
+            <ListView Grid.Row="1" x:Name="HeroResultListView" Margin="0,10,0,0" Background="Transparent" BorderThickness="0">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="#4A5A70" BorderThickness="0,0,0,1" Padding="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Image Grid.Column="0" Source="{Binding HeroImagePath}" Width="64" Height="64" Margin="0,0,15,0"/>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding HeroName}" FontSize="18" FontWeight="Bold" Foreground="White"/>
+                                    <TextBlock Text="{Binding StatDisplay}" FontSize="14" Foreground="#CCCCCC" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+        <Image Source="C:\Users\lenovo\Desktop\暑期课\大作业\其它图片\kpl.jpg"
+               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,20" Height="60" Opacity="0.7"/>
+    </Grid>
+</Window>
